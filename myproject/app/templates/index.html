@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+
+    <a href="/" class="logo">
+        <h1 itemprop="name">Phishing Detection System</h1>
+    </a>
+
+    <div class="short-note">
+    <p itemprop="description">
+        Defend yourself against <strong>phishing threats</strong> using trusted <strong>open-source solutions</strong>. Experience secure browsing with confidence.
+    </p>
+</div>
+
+
+    <form action="/" method="post">
+        {% csrf_token %}
+        <input type="text" name="url" placeholder="URL" required />
+        <button type="submit" class="btn"><b>Analyze URL</b></button>
+    </form>
+
+    {% if output != "NA" %}
+    <div class="result">
+
+        {% if output.status == "SUCCESS" %}
+
+        <div class="trust-score">
+            {% if output.trust_score >= 0 and output.trust_score < 60 %}
+                <span class="low">Trust Score : {{ output.trust_score }} / 100</span>
+            {% elif output.trust_score >= 60 and output.trust_score < 70 %}
+                <span class="medium">Trust Score : {{ output.trust_score }} / 100</span>
+            {% elif output.trust_score >= 70 and output.trust_score < 90 %}
+                <span class="high">Trust Score : {{ output.trust_score }} / 100</span>
+            {% else %}
+                <span class="excellent">Trust Score : {{ output.trust_score }} / 100</span>
+            {% endif %}
+        </div>
+
+        <div class="verdict">
+            {% if output.trust_score < 60 %}
+                <span class="fake">⚠️ Verdict: Likely Fake / Phishing</span>
+            {% else %}
+                <span class="safe">✅ Verdict: Likely Safe</span>
+            {% endif %}
+        </div>
+
+        <div class="url-info">
+            <p>URL: {{ output.url }}</p>
+            {% if output.msg %}
+                <p>{{ output.msg }}</p>
+            {% endif %}
+        </div>
+
+        {% if output.response_status != False %}
+            <p class="note">(External scripts are disabled for your safety.)</p>
+        {% else %}
+            <p class="error">Cannot access this page at the moment. Page may be down or blocked viewing with scripts.</p>
+        {% endif %}
+
+        <div class="info-section">
+            <h3>Info for Nerds</h3>
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <p class="info-label">Global Rank</p>
+                    <p class="info-value">{{ output.rank }}</p>
+                </div>
+
+                <div class="info-item">
+                    <p class="info-label">HTTP Status Code</p>
+                    <p class="info-value">{{ output.response_status }}</p>
+                </div>
+
+                <div class="info-item">
+                    <p class="info-label">Domain Age</p>
+                    <p class="info-value">{{ output.age }}</p>
+                </div>
+
+                <div class="info-item">
+                    <p class="info-label">Use of URL Shortener</p>
+                    <p class="info-value">{% if output.is_url_shortened == 1 %} YES {% else %} NO {% endif %}</p>
+                </div>
+
+                <div class="info-item">
+                    <p class="info-label">HSTS Support</p>
+                    <p class="info-value">{% if output.hsts_support == 1 %} YES {% else %} NO {% endif %}</p>
+                </div>
+
+                <div class="info-item">
+                    <p class="info-label">IP instead of Domain</p>
+                    <p class="info-value">{% if output.ip_present == 1 %} YES {% else %} NO {% endif %}</p>
+                </div>
+
+                <div class="info-item">
+                    <p class="info-label">URL Redirects</p>
+                    <p class="info-value">
+                        {% if output.url_redirects == 0 %}
+                            NO
+                        {% else %}
+                            {{ output.url_redirects }} redirect(s)
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div class="info-item">
+                    <p class="info-label">IP of Domain</p>
+                    <p class="info-value">{{ output.ip }}</p>
+                </div>
+
+                <div class="info-item">
+                    <p class="info-label">Too Long URL</p>
+                    <p class="info-value">{% if output.too_long_url == 1 %} YES {% else %} NO {% endif %}</p>
+                </div>
+
+                <div class="info-item">
+                    <p class="info-label">Too Deep URL</p>
+                    <p class="info-value">{% if output.too_deep_url == 1 %} YES {% else %} NO {% endif %}</p>
+                </div>
+            </div>
+        </div>
+
+        {% if output.ssl %}
+        <div class="ssl-section">
+            <h3>SSL Certificate Details</h3>
+            <div class="info-grid">
+                {% for key, value in output.ssl.items %}
+                <div class="info-item">
+                    <p class="info-label">{{ key }}</p>
+                    <p class="info-value">{{ value }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="whois-section">
+            <h3>WHOIS Data</h3>
+            <div class="info-grid">
+                {% for key, value in output.whois.items %}
+                <div class="info-item">
+                    <p class="info-label">{{ key }}</p>
+                    <p class="info-value">{{ value }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% else %}
+        <p>URL: {{ output.url }}</p>
+        <p>Message: {{ output.msg }}</p>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
